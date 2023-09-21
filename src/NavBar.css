@@ -1,0 +1,14 @@
+/**
+ * NavBar.css
+ * Styles the words icons on the nav bar.
+ * @version 2023.08.20
+ */
+.nav {
+    color: white;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.nav:hover {
+    color: #FFA500;
+    transform: scale(1.05);
+}
