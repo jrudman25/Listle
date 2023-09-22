@@ -1,3 +1,8 @@
+/**
+ * FirebaseConfig.js
+ * Connects the app to Firebase for hosting, storage, and user auth.
+ * @version 2023.09.21
+ */
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";

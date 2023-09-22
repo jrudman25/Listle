@@ -1,5 +1,10 @@
+/**
+ * Signup.tsx
+ * Handles user signup.
+ * @version 2023.09.22
+ */
 import React, { useState, forwardRef } from 'react';
-import { Box, TextField, Button, Snackbar, SnackbarCloseReason } from '@mui/material';
+import {Box, TextField, Button, Snackbar, SnackbarCloseReason, AlertColor} from '@mui/material';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { auth } from './backend/FirebaseConfig';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
@@ -12,10 +17,10 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [severity, setSeverity] = useState('error');
+    const [severity, setSeverity] = useState<AlertColor>('error');
     const navigate = useNavigate();
 
-    const Alert = forwardRef<HTMLDivElement>((props, ref) => {
+    const Alert = forwardRef<HTMLDivElement, AlertProps>((props, ref) => {
         return <MuiAlert ref={ref} elevation={6} variant="filled" {...props} />;
     });
 
@@ -30,7 +35,7 @@ const Login = () => {
         return false;
     }
 
-    const handleSnackbarClose = (event: React.SyntheticEvent  | MouseEvent, reason: SnackbarCloseReason) => {
+    const handleSnackbarClose = (event: Event | React.SyntheticEvent<any, Event>, reason: SnackbarCloseReason) => {
         if (reason === 'clickaway') {
             return;
         }
@@ -164,7 +169,7 @@ const Login = () => {
                     </Box>
                 </form>
                 <Snackbar open={snackbarOpen} autoHideDuration={4500} onClose={handleSnackbarClose}>
-                    <Alert onClose={handleSnackbarClose} severity={severity}>
+                    <Alert severity={severity}>
                         {snackbarMessage}
                     </Alert>
                 </Snackbar>
