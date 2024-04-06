@@ -4,3 +4,5 @@
 Created using TypeScript, React, MUI, React Router, and Firebase.
 
 Managed with Node, Webpack, ESLint, and Babel.
+
+Tested with React Testing Library, Jest, Playwright, and Storybook.

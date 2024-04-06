@@ -1,20 +1,28 @@
 /**
  * Footer.tsx
  * A small footer at the bottom of the page.
- * @version 2023.09.18
+ * @version 2024.04.06
  */
 import React from 'react';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 const Footer = () => {
 
     return (
-        <Typography
-            color = 'white'
-            marginBottom = '0.5rem'
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+            }}
         >
-            Made with ♥ by me © {new Date().getFullYear()}
-        </Typography>
+            <Typography
+                color = 'black'
+                marginBottom = '0.5rem'
+            >
+                Made with ♥ by me © {new Date().getFullYear()}
+            </Typography>
+        </Box>
     );
 };
 

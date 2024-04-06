@@ -1,126 +1,45 @@
 /**
- * Signup.tsx
- * Handles user signup.
- * @version 2023.09.22
+ * Login.tsx
+ * Handles users logging in with a Spotify account.
+ * @version 2024.04.06
  */
-import React, { useState, forwardRef } from 'react';
-import {Box, TextField, Button, Snackbar, SnackbarCloseReason, AlertColor} from '@mui/material';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { auth } from './backend/FirebaseConfig';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import React, { useEffect, useState } from 'react';
+import { Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [severity, setSeverity] = useState<AlertColor>('error');
+    const [accountName, setAccountName] = useState('');
+    const clientId = `${process.env.REACT_APP_SPOTIFY_CLIENT_ID}`;
+    const redirectUri = 'http://localhost:3000/';
+
     const navigate = useNavigate();
 
-    const Alert = forwardRef<HTMLDivElement, AlertProps>((props, ref) => {
-        return <MuiAlert ref={ref} elevation={6} variant="filled" {...props} />;
-    });
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            const response = await fetch('https://api.spotify.com/v1/me', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            const data = await response.json();
+            setAccountName(data.display_name);
+            setTimeout(() => {
+                navigate('/home');
+            }, 2000);
+        };
 
-    async function hasUserCompletedSurvey(email: string) {
-        const firestore = getFirestore();
-        const userRef = doc(firestore, 'users', email);
-        const userSnapshot = await getDoc(userRef);
+        const urlParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = urlParams.get('access_token');
 
-        if (userSnapshot.exists()) {
-            return userSnapshot.data().surveyCompleted || false;
+        if (accessToken) {
+            sessionStorage.setItem('accessToken', accessToken);
+            fetchUserProfile();
         }
-        return false;
-    }
+    }, [navigate]);
 
-    const handleSnackbarClose = (event: Event | React.SyntheticEvent<any, Event>, reason: SnackbarCloseReason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
-        setSnackbarOpen(false);
-    };
-
-    const showSnackbar = (message: string) => {
-        setSnackbarMessage(message);
-        setSnackbarOpen(true);
-    };
-
-    if (sessionStorage.getItem('isLoggedIn') === 'true') {
-        return <Navigate to="/home" />;
-    }
-
-    const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => setEmail(event.target.value);
-    const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => setPassword(event.target.value);
-
-    const handleSubmit = async (event: React.SyntheticEvent) => {
-        event.preventDefault();
-        await signInWithEmailAndPassword(auth, email, password)
-            .then(async () => {
-                const user = auth.currentUser;
-                if (user && !user.emailVerified) {
-                    showSnackbar('Please verify your email before logging in.');
-                    return;
-                }
-                setSeverity('success');
-                showSnackbar('Successful login!');
-                sessionStorage.setItem('username', email);
-
-                const surveyCompleted = await hasUserCompletedSurvey(email);
-                if (!surveyCompleted) {
-                    setTimeout(() => {
-                        navigate('/questionnaire');
-                        sessionStorage.setItem('isLoggedIn', 'true');
-                    }, 1750);
-                } else {
-                    setTimeout(() => {
-                        navigate('/home');
-                        sessionStorage.setItem('isLoggedIn', 'true');
-                    }, 1750);
-                }
-            })
-            .catch((error) => {
-                console.log(error.code);
-                if (error.code === 'auth/invalid-email') {
-                    showSnackbar("Invalid email.");
-                }
-                else if (error.code === 'auth/user-not-found') {
-                    showSnackbar("User not found.");
-                }
-                else if (error.code === 'auth/missing-password') {
-                    showSnackbar("Please enter your password.");
-                }
-                else if (error.code === 'auth/wrong-password') {
-                    showSnackbar("Incorrect password.");
-                }
-                else {
-                    showSnackbar("An unexpected error has occurred. Please reload and try again.");
-                }
-            })
-    };
-
-    const handleForgotPassword = async () => {
-        if (email === '') {
-            showSnackbar('Please enter your email address to reset your password.');
-        }
-        else {
-            try {
-                await sendPasswordResetEmail(auth, email);
-                showSnackbar('A password reset email has been sent to your email address.');
-            } catch (error: any) {
-                console.log(error.code)
-                if (error.code === 'auth/invalid-email') {
-                    showSnackbar("Please enter a valid email.");
-                }
-                else if (error.code === 'auth/user-not-found') {
-                    showSnackbar("User not found.");
-                }
-                else {
-                    showSnackbar('An error occurred while sending the password reset email. Please try again.');
-                }
-            }
-        }
+    const handleLogin = () => {
+        window.location.href = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&show_dialog=true`;
     };
 
     return (
@@ -130,49 +49,14 @@ const Login = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    minHeight: '100vh'
                 }}
             >
-                <h1>Log in</h1>
-                <a href="/signup">
-                    Don't have an account?
-                </a>
-                <form onSubmit={handleSubmit}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}>
-                        <TextField
-                            id="username"
-                            label="Email"
-                            type="text"
-                            value={email}
-                            onChange={handleUsernameChange}
-                            sx={{margin: 0.5}}
-                        />
-                        <TextField
-                            id="password"
-                            label="Password"
-                            type="password"
-                            value={password}
-                            onChange={handlePasswordChange}
-                            sx={{margin: 0.5}}
-                        />
-                        <Button type="submit" variant="contained" sx={{ marginTop: '1rem' }}>
-                            Submit
-                        </Button>
-                        <Button
-                            variant="text"
-                            color="secondary"
-                            onClick={handleForgotPassword}
-                            sx={{ marginTop: '1rem' }}
-                        >
-                            Forgot Password?
-                        </Button>
-                    </Box>
-                </form>
-                <Snackbar open={snackbarOpen} autoHideDuration={4500} onClose={handleSnackbarClose}>
-                    <Alert severity={severity}>
-                        {snackbarMessage}
-                    </Alert>
-                </Snackbar>
+                <h1>Login with Spotify</h1>
+                {accountName ? (
+                    <p>Welcome, {accountName}!</p>
+                ) : (
+                    <button onClick={handleLogin}>Login with Spotify</button>
+                )}
             </Box>
         </div>
     );
